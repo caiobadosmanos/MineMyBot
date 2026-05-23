@@ -1,2 +1,2 @@
-# MineMyBot
-Rapositorio de site que cria bots 
+# Loja3d
+Minha Loja Progamada por mim

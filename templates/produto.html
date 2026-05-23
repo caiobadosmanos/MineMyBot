@@ -1,0 +1,96 @@
+{% extends "layout.html" %}
+
+{% block title %}
+{{ produto.nome }}
+{% endblock %}
+
+{% block main %}
+<div id="theproduto">
+    <div id="divimg">
+        <img class="imagem" id="imagem" src="/static/produtos/{{ produto.imagens.split(',')[0]|replace(' ', '') }}" alt="Imagem do produto">
+        <button id="proxima"><img src="/static/seta.png" height="40px"></button>
+    </div>
+
+
+
+    <div id="info">
+        <h2 id="nome">{{ produto.nome }}</h2>
+        <div id="precos">
+            <h3 id="preco">{{ precos[0] }}</h3><h4 class="rs">R$</h4>
+        </div>
+        <p id="descricao">{{ produto.descricao }}</p>
+
+        <div id="cores">
+            <h4>Cores:</h4>
+            {% for cor in cores %}
+                <p><button class="cores" id="cor{{ loop.index }}" onclick="mostrarPreco({{ loop.index }})">{{ cor }}</button></p>
+            {% endfor %}
+        </div>
+        <div id="carrinho">
+            <form method="get" action="/adicionar_carrinho">
+                <input type="hidden" name="produto_id" value="{{ produto.id }}">
+                <input type="hidden" name="cor" id="cor_selecionada" value="">
+                <input type="hidden" name="preco" id="preco_selecionado" value="">
+        
+                <button class="cores" type="submit">
+                    <h4 id="add">Adicionar ao Carrinho</h4>
+                    <img class="carrinho" src="https://img.icons8.com/?size=100&id=47623&format=png&color=000000" alt="Carrinho">
+                </button>
+            </form>
+        </div>
+        
+        <form method="get">
+            <input type="hidden" name="produto_id" value="{{ produto.id }}">
+            <input type="hidden" name="cor" id="cor_selecionada_buy" value="">
+            <input type="hidden" name="preco" id="preco_selecionado_buy" value="">
+        
+            <button class="comprar" value="{{ produto.id }}" name="buy">Comprar Agora</button>
+        </form>
+        
+        
+        
+        
+</div>
+   
+    
+     <!-- Miniaturas -->
+     <div id="miniaturas">
+        {% for imagem in produto.imagens.split(',') %}
+            <img class="miniatura" src="/static/produtos/{{ imagem|replace(' ', '') }}" onclick="trocarImagem('{{ imagem|replace(' ', '') }}')">
+        {% endfor %}
+    </div>
+    <script>
+        const precos = {{ precos|tojson }};
+        const imagens = {{ produto.imagens.split(',')|tojson }}.map(img => img.trim());
+        let index = 0;
+        let botaoAtivo = null;
+    
+        document.getElementById("proxima").addEventListener("click", function() {
+            index = (index + 1) % imagens.length;
+            document.getElementById("imagem").src = "/static/produtos/" + imagens[index];
+        });
+    
+        function mostrarPreco(corId) {
+            document.getElementById("preco").innerText = precos[corId - 1];
+    
+            if (botaoAtivo) {
+                botaoAtivo.classList.remove("ativo");
+            }
+    
+            botaoAtivo = document.getElementById("cor" + corId);
+            botaoAtivo.classList.add("ativo");
+    
+            // Atualiza os campos ocultos dos dois formulários
+            document.getElementById("cor_selecionada").value = botaoAtivo.innerText.trim();
+            document.getElementById("preco_selecionado").value = precos[corId - 1];
+    
+            document.getElementById("cor_selecionada_buy").value = botaoAtivo.innerText.trim();
+            document.getElementById("preco_selecionado_buy").value = precos[corId - 1];
+        }
+    
+        function trocarImagem(src) {
+            document.getElementById("imagem").src = "/static/produtos/" + src;
+        }
+    </script>
+
+{% endblock %}

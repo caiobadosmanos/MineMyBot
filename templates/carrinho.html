@@ -1,0 +1,140 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Carrinho
+{% endblock %}
+
+{% block main %}
+    <h1 class="carrinho-title">Carrinho</h1>
+
+    <h2 class="username">{{ user.username }}</h2>
+
+    <h2 class="itens-title">Itens</h2>
+
+    <div class="itens-container">
+        {% for produto in produtos %}
+        <div class="item" id="item-{{ produto.id }}">
+            <img class="item-image" src="/static/produtos/{{ produto.imagens.split(',')[0]|replace(' ', '') }}" alt="Imagem do produto">
+            {% if info %}
+                <div class="item-info">
+                    <div class="item-name-and-color">
+                        <h3 class="item-name">{{ produto.nome }} - {{ info[loop.index-1].cor }}</h3>
+                    </div>
+                    <div class="item-price">
+                        <h3>{{ info[loop.index -1].preco }}</h3>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <form method="get">
+        {% for produto in produtos %}
+        <input type="hidden" name="id{{loop.index-1}}" value="{{ produto.id }}">
+        <input type="hidden" name="preco{{loop.index-1}}" value="{{ info[loop.index -1].preco }}">
+        <input type="hidden" name="cor{{loop.index-1}}" value="{{ info[loop.index-1].cor}}">
+        
+
+        {% endfor %}
+        <input type="hidden" name="quant" value="{{ produtos | length }}">
+
+        <button class="comprar" value="null" name="buy">Comprar Agora</button>
+        
+    </form>
+    
+    <style>
+        .carrinho-title {
+            font-size: 2em;
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .username {
+            text-align: center;
+            font-size: 1.5em;
+            color: #555;
+            margin-bottom: 40px;
+        }
+
+        .itens-title {
+            font-size: 1.8em;
+            color: #444;
+            margin-bottom: 20px;
+        }
+
+        .itens-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 0 20px;
+            cursor:pointer;
+        }
+
+        .item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .item-image {
+            height: 60px;
+            margin-right: 20px;
+            border-radius: 8px;
+        }
+
+        .item-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .item-name-and-color {
+            flex-grow: 1;
+        }
+
+        .item-name {
+            font-size: 1.1em;
+            color: #333;
+            margin: 0;
+        }
+
+        .item-price {
+            text-align: right;
+            margin-left: 20px;
+        }
+    </style>
+
+    <script>
+        document.querySelectorAll('.item').forEach(item => {
+            item.addEventListener('click', function() {
+                const produtoId = this.id.split('-')[1];  // Extrai o ID do produto
+
+                // Envia o ID via POST para o servidor
+                fetch('/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ id: produtoId }),
+                })
+                .then(response => response.json())  // Aguarda a resposta JSON
+                .then(data => {
+                    if (data.status === "sucesso") {
+                        window.location.href = "/produto";  // Redireciona a página
+                    } else {
+                        console.error('Erro:', data.mensagem);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao enviar dados:', error);
+                });
+            });
+        });
+    </script>
+{% endblock %}

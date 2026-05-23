@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+
+{% block title %}
+3D Tudo
+{% endblock %}
+
+{% block main %}
+<div class="produtos-container">
+{% for row in produtos %}
+<div class="produtos" id="produtos-{{ row.id }}">
+
+    <img id = "imgm"src = "static\produtos\{{ row.imagens.split(',')[0] }}">
+
+    <p class="nome">{{ row.nome }}</p>
+    <p class = "preco">{{ row.precos.split(',')[0] }} <bold class= "rs">R$</bold></p>
+
+
+</div>
+{% endfor %}
+</div>
+<script>
+    // Seleciona todos os elementos com a classe 'produtos'
+    document.querySelectorAll('.produtos').forEach(item => {
+        item.addEventListener('click', function() {
+            const produtoId = this.id.split('-')[1];  // Extrai o ID do produto
+
+            // Envia o ID via POST para o servidor
+            fetch('/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id: produtoId }),
+            })
+            .then(response => response.json())  // Aguarda a resposta JSON
+            .then(data => {
+                if (data.status === "sucesso") {
+                    window.location.href = "/produto";  // Redireciona a página
+                } else {
+                    console.error('Erro:', data.mensagem);
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao enviar dados:', error);
+            });
+        });
+    });
+</script>
+
+{% endblock %}
+

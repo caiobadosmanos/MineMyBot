@@ -1,0 +1,98 @@
+{% extends "layout.html" %}
+
+{% block title %}
+3D Tudo
+{% endblock %}
+
+{% block main %}
+<div class="pix-container">
+    <h2 class="pix-title">Para Finalizar, Basta Fazer um pix de {{valor}}R$ para <a href="#" class="pix-link" id="pix-link">13357973600</a></h2>
+    <p>Você recebera o comfirmamento de seu pagamento algumas horas depois</p>
+</div>
+
+<script>
+    // Função para copiar o texto do PIX
+    function copiarPix() {
+        // Seleciona o texto do link
+        const pixText = "13357973600"; // Texto que será copiado
+
+        // Usa a API de Clipboard para copiar o texto
+        navigator.clipboard.writeText(pixText)
+            .then(() => {
+                // Exibe um alerta informando que o texto foi copiado
+                alert("Link copiado: " + pixText);
+            })
+            .catch((err) => {
+                // Caso ocorra um erro, exibe uma mensagem no console
+                console.error("Erro ao copiar o texto: ", err);
+            });
+    }
+
+    // Adiciona um evento de clique ao link do PIX
+    document.getElementById("pix-link").addEventListener("click", function (event) {
+        event.preventDefault(); // Impede o comportamento padrão do link
+        copiarPix(); // Chama a função para copiar o texto
+    });
+</script>
+
+<style>
+    /* Estilo para o container principal */
+    .pix-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 80vh; /* Altura da tela para centralizar verticalmente */
+        background-color: #f9f9f9;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* Estilo para o título */
+    .pix-title {
+        font-size: 2rem;
+        color: #333;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    /* Estilo para o link do PIX */
+    .pix-link {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: bold;
+        transition: color 0.3s ease;
+        cursor: pointer; /* Muda o cursor para indicar que é clicável */
+    }
+
+    .pix-link:hover {
+        color: #0056b3;
+        text-decoration: underline;
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .pix-title {
+            font-size: 1.5rem;
+        }
+
+        .pix-container {
+            padding: 15px;
+            height: 60vh;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .pix-title {
+            font-size: 1.2rem;
+        }
+
+        .pix-container {
+            padding: 10px;
+            height: 50vh;
+        }
+    }
+</style>
+{% endblock %}

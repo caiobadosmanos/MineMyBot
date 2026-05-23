@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta name="viewport" content="initial-scale=1, width=device-width">
+    <title>{% block title %}{% endblock %}</title>
+    <link href="/static/styles.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='icon.png') }}">
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4034356860282234" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <header>
+        <div class="header">
+            <div class="header-content">
+            <div class ="barraCima">
+            <div id = "tudo">
+                <a href= "/"><img id="logo" src="static/logo.png" alt="Logo">
+
+                </a>
+                <h2 id = "nome">3d Tudo</h2>
+
+                
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 60px;">
+            <a href="/logout" id ="logout"><h3>Logout</h3></a>
+
+
+            <a style="margin-top: 10px;" href="/carrinho"><img class="carrinho" src="https://img.icons8.com/?size=100&id=47623&format=png&color=000000" alt="Carrinho">
+            
+            </a>
+        </div>
+        </div>
+                <form method="post" id="barra_pesquisa">
+                    <input name = "pesquisa"type="text" placeholder="Pesquisar" id="barrra_de_pesquisa">
+                    <button type="submit" id="lupabt">
+                        <img src="/static/lupa.png" alt="Buscar" id ="lupa">
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </header>
+
+    <main>
+        {% block main %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="footer-link">
+            <!-- Links e informações de contato -->
+        </div>
+    </footer>
+    
+</body>
+
+</html>
