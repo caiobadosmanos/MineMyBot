@@ -98,7 +98,8 @@ def inicialpage():
 @login_required
 def index():
     global produto  # Define a variável global 'produto'
-
+    user_id = session["user_id"]
+    print(user.id)
     if request.method == "POST":
         # Verifica se o POST é uma pesquisa
         if "pesquisa" in request.form:
@@ -190,7 +191,7 @@ def produto():
     if produto:
         return render_template("produto.html", produto=produto, precos=precos, cores=cores)
     else:
-        return redirect("/")
+        return redirect("/home")
 
 @app.route("/carrinho", methods=["GET", "POST"])
 @login_required
@@ -301,7 +302,7 @@ def login():
         session["user_id"] = rows[0]["id"]
 
         # Redireciona para a página inicial
-        return redirect("/")
+        return redirect("/home")
 
     # Se o método for GET, exibe a página de login
     return render_template("login.html")
@@ -360,7 +361,7 @@ def logout():
     session.clear()
 
     # Redireciona para a página de login
-    return redirect("/")
+    return redirect("/home")
 @app.route("/adicionar_carrinho", methods=["GET"])
 def adicionar_carrinho():
     if 'user_id' in session:
@@ -411,7 +412,7 @@ def login():
         session["user_id"] = rows[0]["id"]
 
         # Redireciona para a página inicial
-        return redirect("/")
+        return redirect("/home")
 
     # Se o método for GET, exibe a página de login
     return render_template("login.html")

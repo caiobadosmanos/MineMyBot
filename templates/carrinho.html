@@ -3,7 +3,16 @@
 {% block title %}
     Carrinho
 {% endblock %}
+{% pesquisa %}
 
+            <form method="post" id="barra_pesquisa">
+                <input name="pesquisa" type="text" placeholder="Pesquisar produtos...">
+                <button type="submit" aria-label="Buscar">
+                    <img src="/static/lupa.png" alt="Buscar" id="lupa" style="height: 20px; width: auto;">
+                </button>
+            </form>
+
+{% endblock %}
 {% block main %}
     <h1 class="carrinho-title">Carrinho</h1>
 
@@ -43,73 +52,6 @@
         
     </form>
     
-    <style>
-        .carrinho-title {
-            font-size: 2em;
-            color: #333;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .username {
-            text-align: center;
-            font-size: 1.5em;
-            color: #555;
-            margin-bottom: 40px;
-        }
-
-        .itens-title {
-            font-size: 1.8em;
-            color: #444;
-            margin-bottom: 20px;
-        }
-
-        .itens-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            padding: 0 20px;
-            cursor:pointer;
-        }
-
-        .item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .item-image {
-            height: 60px;
-            margin-right: 20px;
-            border-radius: 8px;
-        }
-
-        .item-info {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-        }
-
-        .item-name-and-color {
-            flex-grow: 1;
-        }
-
-        .item-name {
-            font-size: 1.1em;
-            color: #333;
-            margin: 0;
-        }
-
-        .item-price {
-            text-align: right;
-            margin-left: 20px;
-        }
-    </style>
-
     <script>
         document.querySelectorAll('.item').forEach(item => {
             item.addEventListener('click', function() {

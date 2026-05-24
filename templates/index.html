@@ -3,7 +3,16 @@
 {% block title %}
 3D Tudo
 {% endblock %}
+{% block pesquisa %}
 
+            <form method="post" id="barra_pesquisa">
+                <input name="pesquisa" type="text" placeholder="Pesquisar produtos...">
+                <button type="submit" aria-label="Buscar">
+                    <img src="/static/lupa.png" alt="Buscar" id="lupa" style="height: 20px; width: auto;">
+                </button>
+            </form>
+
+{% endblock %}
 {% block main %}
 <div class="produtos-container">
 {% for row in produtos %}
