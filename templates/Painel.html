@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block title %}
+3D Tudo
+{% endblock %}
+{% block pesquisa %}
+
+            <form method="post" id="barra_pesquisa">
+                <input name="pesquisa" type="text" placeholder="Pesquisar produtos...">
+                <button type="submit" aria-label="Buscar">
+                    <img src="/static/lupa.png" alt="Buscar" id="lupa" style="height: 20px; width: auto;">
+                </button>
+            </form>
+
+{% endblock %}
+{% block main %}
+
+<form method="post" class="painel-form">
+    <input name="nick" placeholder="Nick do bot">
+    <input name="host" placeholder="Endereço do Servidor">
+    <input name="port" placeholder="Porta do Servidor">
+    <input name="version" placeholder="Vesão do Minecraft">
+    
+    <button type="submit" name="action" value="iniciar" class="painel-button iniciar-button">Iniciar Bot</button>
+</form>
+<form method="post" class="painel-form">
+    <button type="submit" name="action" value="sair" class="painel-button sair-button">Interromper Bot</button>
+</form>
+{% endblock %}

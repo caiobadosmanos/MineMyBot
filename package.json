@@ -1,0 +1,15 @@
+{
+  "name": "minemybot",
+  "version": "1.0.0",
+  "description": "MineMyBot project with Flask backend and Mineflayer bot",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "bot": "node bot.js"
+  },
+  "dependencies": {
+    "mineflayer": "^4.10.0",
+    "mineflayer-pathfinder": "^1.0.0",
+    "minecraft-data": "^2.0.0"
+  }
+}

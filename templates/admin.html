@@ -1,0 +1,78 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Admin - MineMyBot
+{% endblock %}
+
+{% block main %}
+<div class="admin-panel">
+    <h1 class="page-title">Painel Admin</h1>
+
+    {% if mensagem %}
+    <div class="notice">{{ mensagem }}</div>
+    {% endif %}
+
+    <section class="section-card">
+        <h2 class="section-title">Adicionar novo produto</h2>
+            <form method="post" class="admin-form" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="add">
+                <label>Nome</label>
+                <input type="text" name="nome" placeholder="Nome do produto" required>
+                <label>Descrição</label>
+                <textarea name="descricao" rows="3" placeholder="Descrição do produto"></textarea>
+                <label>Imagens (separadas por vírgula)</label>
+                <input type="text" name="imagens" placeholder="imagem1.png, imagem2.png">
+                <label>Upload de imagem</label>
+                <input type="file" name="imagem_upload" accept="image/*">
+            <label>Cores (separadas por vírgula)</label>
+            <input type="text" name="cores" placeholder="Azul, Vermelho, Preto">
+            <button type="submit" class="button-primary">Adicionar produto</button>
+        </form>
+    </section>
+
+    <section class="section-card">
+        <h2 class="section-title">Produtos cadastrados</h2>
+        <div class="admin-list">
+            {% for produto in produtos %}
+            <div class="admin-item">
+                <div class="admin-item-header">
+                    <strong>{{ produto.nome }}</strong>
+                    <span>ID {{ produto.id }}</span>
+                </div>
+                <form method="post" class="admin-form admin-grid" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="update">
+                    <input type="hidden" name="produto_id" value="{{ produto.id }}">
+
+                    <label>Nome</label>
+                    <input type="text" name="nome" value="{{ produto.nome }}" required>
+
+                    <label>Descrição</label>
+                    <textarea name="descricao" rows="2">{{ produto.descricao or '' }}</textarea>
+
+                        <label>Imagens</label>
+                    <input type="text" name="imagens" value="{{ produto.imagens or '' }}">
+
+                    <label>Upload de imagem</label>
+                    <input type="file" name="imagem_upload" accept="image/*">
+
+                    <label>Preços</label>
+                    <input type="text" name="precos" value="{{ produto.precos or '' }}">
+
+                    <label>Cores</label>
+                    <input type="text" name="cores" value="{{ produto.cores or '' }}">
+
+                    <div class="admin-buttons">
+                        <button type="submit" class="button-primary">Salvar</button>
+                    </div>
+                </form>
+                <form method="post" class="admin-form admin-delete">
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="produto_id" value="{{ produto.id }}">
+                    <button type="submit" class="button-secondary">Excluir</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

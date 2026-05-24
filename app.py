@@ -1,6 +1,8 @@
+import os
 from flask import Flask, redirect, render_template, request, session
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
 
 from cs50 import SQL
 from flask import Flask, jsonify, render_template
@@ -8,9 +10,11 @@ from flask import Flask, jsonify, render_template
 
 from functools import wraps
 
-
+import subprocess
 import smtplib
 import email.message
+
+bot = None
 
 def enviar_email(corpo_email):  
     
@@ -61,6 +65,10 @@ Session(app)
 # Chave secreta para criptografar a sessão
 app.secret_key = 'sua_chave_secreta_aqui'
 
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'produtos')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 
 def login_required(f):
     @wraps(f)
@@ -72,8 +80,8 @@ def login_required(f):
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///loja.db")
 
-# Variável global produto
-produto = []
+# Variável global do produto selecionado
+produto_atual = {}
 
 @app.after_request
 def after_request(response):
@@ -92,14 +100,103 @@ def inicialpage():
         return redirect("/home")
     return render_template("inicialpage.html")
 
+@app.route("/Painel", methods=["GET", "POST"])
+@login_required
+def painel():
+    global bot
+    if request.method == "POST":
+        action = request.form.get("action")
+        if action == "sair":
+            if bot:
+                bot.terminate()
+                bot = None
+            return render_template("Painel.html", mensagem="Bot interrompido com sucesso.")
+        elif action == "iniciar":
+            if not bot:
+                nick = request.form.get("nick")
+                host = request.form.get("host")
+                version = request.form.get("version")
+                port = request.form.get("port")
+                bot = subprocess.Popen([
+                    "node",
+                    "bot.js",
+                    nick,
+                    host,
+                    port,
+                    version
+                ])
+                return render_template("Painel.html", mensagem="Bot iniciado com sucesso.") 
+            else:  
+                return render_template("Painel.html", mensagem="O bot já está em execução.")
+    return render_template("Painel.html")
 
+@app.route("/admin", methods=["GET", "POST"])
+@login_required
+def admin():
+    if session.get("user_id") != 9:
+        return redirect("/home")
+
+    mensagem = None
+    if request.method == "POST":
+        action = request.form.get("action")
+        produto_id = request.form.get("produto_id")
+        nome = request.form.get("nome", "").strip()
+        descricao = request.form.get("descricao", "").strip()
+        imagens = request.form.get("imagens", "").strip()
+        precos = request.form.get("precos", "").strip()
+        cores = request.form.get("cores", "").strip()
+        upload = request.files.get("imagem_upload")
+
+        if upload and upload.filename:
+            filename = secure_filename(upload.filename)
+            caminho = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            upload.save(caminho)
+            if imagens:
+                imagens = f"{imagens},{filename}"
+            else:
+                imagens = filename
+
+        if action == "add":
+            if not nome:
+                mensagem = "Nome é obrigatório para adicionar um produto."
+            else:
+                db.execute(
+                    "INSERT INTO produtos (nome, descricao, imagens, precos, cores) VALUES (?, ?, ?, ?, ?)",
+                    nome,
+                    descricao,
+                    imagens,
+                    precos,
+                    cores,
+                )
+                mensagem = "Produto adicionado com sucesso."
+
+        elif action == "update" and produto_id:
+            db.execute(
+                "UPDATE produtos SET nome = ?, descricao = ?, imagens = ?, precos = ?, cores = ? WHERE id = ?",
+                nome,
+                descricao,
+                imagens,
+                precos,
+                cores,
+                produto_id,
+            )
+            mensagem = "Produto atualizado com sucesso."
+
+        elif action == "delete" and produto_id:
+            db.execute("DELETE FROM carrinho WHERE produto_id = ?", produto_id)
+            db.execute("DELETE FROM produtos WHERE id = ?", produto_id)
+            mensagem = "Produto excluído com sucesso."
+
+    produtos = db.execute("SELECT * FROM produtos")
+    return render_template("admin.html", produtos=produtos, mensagem=mensagem)
 
 @app.route("/home", methods=["GET", "POST"])
 @login_required
 def index():
-    global produto  # Define a variável global 'produto'
+    global produto_atual  # Define a variável global do produto selecionado
     user_id = session["user_id"]
-    print(user.id)
+    if user_id == 9:
+        return redirect("/admin")
     if request.method == "POST":
         # Verifica se o POST é uma pesquisa
         if "pesquisa" in request.form:
@@ -134,7 +231,7 @@ def index():
             resultado = db.execute("SELECT * FROM produtos WHERE id = ?", produto_id)
 
             if resultado:
-                produto = resultado[0]  # Armazena apenas o primeiro produto encontrado
+                produto_atual = resultado[0]  # Armazena apenas o primeiro produto encontrado
                 return jsonify({"status": "sucesso"}), 200
             else:
                 return jsonify({"status": "erro", "mensagem": "Produto não encontrado"}), 404
@@ -147,7 +244,7 @@ def index():
 @app.route("/produto", methods=["GET", "POST"])
 @login_required
 def produto():
-    global produto
+    global produto_atual
 
     if request.method == "POST":
         if "cep" in request.form:
@@ -185,11 +282,11 @@ def produto():
         enviar_email(text)
         return render_template("pagamento.html", valor = valor)
         
-
-    precos = produto["precos"].split(",")
-    cores = produto["cores"].split(",")
-    if produto:
-        return render_template("produto.html", produto=produto, precos=precos, cores=cores)
+    print(produto_atual)
+    precos = produto_atual["precos"].split(",")
+    cores = produto_atual["cores"].split(",")
+    if produto_atual:
+        return render_template("produto.html", produto=produto_atual, precos=precos, cores=cores)
     else:
         return redirect("/home")
 
@@ -406,7 +503,7 @@ def login():
         if len(rows) != 1 or not check_password_hash(
             rows[0]["hash"], request.form.get("password")
         ):
-            return ("invalid username and/or password")
+            return redirect("/login")
 
         # Armazena o ID do usuário na sessão
         session["user_id"] = rows[0]["id"]

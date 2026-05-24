@@ -34,7 +34,7 @@
             const produtoId = this.id.split('-')[1];  // Extrai o ID do produto
 
             // Envia o ID via POST para o servidor
-            fetch('/', {
+            fetch('/home', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
