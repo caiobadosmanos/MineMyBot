@@ -1,29 +1,200 @@
-{% extends "layout.html" %}
-
-{% block title %}
-3D Tudo
-{% endblock %}
-{% block pesquisa %}
-
-            <form method="post" id="barra_pesquisa">
-                <input name="pesquisa" type="text" placeholder="Pesquisar produtos...">
-                <button type="submit" aria-label="Buscar">
-                    <img src="/static/lupa.png" alt="Buscar" id="lupa" style="height: 20px; width: auto;">
-                </button>
-            </form>
-
-{% endblock %}
 {% block main %}
+<style>
+    /* Container Principal do Painel */
+    .painel-form, .painel-log, .painel-status {
+        max-width: 600px;
+        margin: 0 auto 20px auto;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(148, 163, 184, 0.1);
+        border-radius: 24px;
+        padding: 24px;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Ajuste específico para o formulário de inputs */
+    .painel-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    /* Estilização dos Inputs (Nick, Host, Port, Version) */
+    .painel-form input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.95rem;
+        transition: all 0.25s ease;
+    }
+
+    .painel-form input:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: rgba(56, 189, 248, 0.04);
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
+    }
+
+    .painel-form input::placeholder {
+        color: rgba(226, 232, 240, 0.4);
+    }
+
+    /* Base dos Botões do Painel */
+    .painel-button {
+        width: 100%;
+        padding: 16px;
+        border-radius: 999px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Botão Iniciar Bot (Verde Accent da sua paleta) */
+    .iniciar-button {
+        background: var(--accent) !important;
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(34, 197, 94, 0.2);
+    }
+
+    .iniciar-button:hover {
+        background: #16a34a !important;
+        transform: translateY(-2px);
+        box-shadow: 0 12px 25px rgba(34, 197, 94, 0.3);
+    }
+
+    /* Botão Interromper Bot (Vermelho/Laranja de Alerta elegante) */
+    .sair-button {
+        background: #ef4444 !important;
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.2);
+    }
+
+    .sair-button:hover {
+        background: #dc2626 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 12px 25px rgba(239, 68, 68, 0.3);
+    }
+
+    /* Status e Mensagens */
+    .painel-status {
+        font-size: 1.05rem;
+        color: var(--text);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .painel-status strong {
+        color: var(--primary);
+        font-weight: 700;
+    }
+
+    /* Caixa de mensagem flutuante/alerta */
+    .mensagem {
+        background: rgba(56, 189, 248, 0.1);
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        color: var(--primary);
+        justify-content: center;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    /* Terminal de Logs do Bot */
+    .painel-log {
+        max-width: 600px;
+    }
+
+    .painel-log h3 {
+        margin: 0 0 14px 0;
+        font-size: 1.1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+    }
+
+    .painel-log ul {
+        list-style: none;
+        padding: 16px;
+        margin: 0;
+        background: #090d16; /* Fundo estilo linha de comando ultra escuro */
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        border-radius: 14px;
+        max-height: 250px;
+        overflow-y: auto;
+        font-family: 'Fira Code', 'Courier New', Courier, monospace; /* Fonte estilo código */
+        font-size: 0.88rem;
+    }
+
+    .painel-log li {
+        color: #a7f3d0; /* Verde claro estilo terminal */
+        line-height: 1.6;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        padding: 4px 0;
+        word-break: break-all;
+    }
+
+    .painel-log li:last-child {
+        border-bottom: none;
+    }
+
+    /* Customização da barra de rolagem do Log para combinar com o tema */
+    .painel-log ul::-webkit-scrollbar {
+        width: 6px;
+    }
+    .painel-log ul::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .painel-log ul::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.3);
+        border-radius: 999px;
+    }
+</style>
 
 <form method="post" class="painel-form">
     <input name="nick" placeholder="Nick do bot">
     <input name="host" placeholder="Endereço do Servidor">
     <input name="port" placeholder="Porta do Servidor">
-    <input name="version" placeholder="Vesão do Minecraft">
+    <input name="version" placeholder="Versão do Minecraft">
     
     <button type="submit" name="action" value="iniciar" class="painel-button iniciar-button">Iniciar Bot</button>
 </form>
 <form method="post" class="painel-form">
     <button type="submit" name="action" value="sair" class="painel-button sair-button">Interromper Bot</button>
 </form>
+
+{% if mensagem %}
+<div class="painel-status mensagem">{{ mensagem }}</div>
+{% endif %}
+
+{% if bot_running is not none %}
+<div class="painel-status">
+    Status do bot: <strong>{{ 'Em execução' if bot_running else 'Parado' }}</strong>
+</div>
+{% endif %}
+
+{% if server_status %}
+<div class="painel-status">
+    Status do servidor: <strong>{{ 'Online' if server_status == 'online' else 'Offline' }}</strong>
+</div>
+{% endif %}
+
+{% if bot_logs %}
+<div class="painel-log">
+    <h3>Logs do bot</h3>
+    <ul>
+        {% for line in bot_logs %}
+        <li>{{ line }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
 {% endblock %}

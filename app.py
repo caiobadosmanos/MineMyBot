@@ -1,11 +1,14 @@
 import os
-from flask import Flask, redirect, render_template, request, session
+import socket
+import threading
+import subprocess
+from collections import deque
+from flask import Flask, redirect, render_template, request, session, jsonify
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 from cs50 import SQL
-from flask import Flask, jsonify, render_template
 
 
 from functools import wraps
@@ -15,6 +18,27 @@ import smtplib
 import email.message
 
 bot = None
+bot_logs = deque(maxlen=50)
+log_lock = threading.Lock()
+
+
+def read_bot_output(proc):
+    if proc.stdout is None:
+        return
+    for line in proc.stdout:
+        text = line.strip()
+        if text:
+            with log_lock:
+                bot_logs.append(text)
+
+
+def check_server(host, port, timeout=5):
+    try:
+        with socket.create_connection((host, int(port)), timeout):
+            return True
+    except Exception:
+        return False
+
 
 def enviar_email(corpo_email):  
     
@@ -104,31 +128,74 @@ def inicialpage():
 @login_required
 def painel():
     global bot
+    bot_running = False
+    bot_message = None
+    server_status = None
+
+    if bot is not None:
+        if bot.poll() is None:
+            bot_running = True
+        else:
+            bot = None
+
     if request.method == "POST":
         action = request.form.get("action")
+        nick = request.form.get("nick")
+        host = request.form.get("host")
+        version = request.form.get("version")
+        port = request.form.get("port")
+
         if action == "sair":
-            if bot:
+            if bot_running and bot:
                 bot.terminate()
                 bot = None
-            return render_template("Painel.html", mensagem="Bot interrompido com sucesso.")
+                bot_running = False
+                bot_message = "Bot interrompido com sucesso."
+                with log_lock:
+                    bot_logs.append("Bot interrompido manualmente.")
+            else:
+                bot_message = "Nenhum bot em execução no momento."
+
         elif action == "iniciar":
-            if not bot:
-                nick = request.form.get("nick")
-                host = request.form.get("host")
-                version = request.form.get("version")
-                port = request.form.get("port")
-                bot = subprocess.Popen([
-                    "node",
-                    "bot.js",
-                    nick,
-                    host,
-                    port,
-                    version
-                ])
-                return render_template("Painel.html", mensagem="Bot iniciado com sucesso.") 
-            else:  
-                return render_template("Painel.html", mensagem="O bot já está em execução.")
-    return render_template("Painel.html")
+            if bot_running:
+                bot_message = "O bot já está em execução."
+            elif not host or not port:
+                bot_message = "Host e porta são obrigatórios para iniciar o bot."
+            else:
+                server_status = "online" if check_server(host, port) else "offline"
+                if server_status == "offline":
+                    bot_message = f"Servidor {host}:{port} não está ativo ou não aceita conexões."
+                    with log_lock:
+                        bot_logs.append(bot_message)
+                else:
+                    bot = subprocess.Popen(
+                        [
+                            "node",
+                            "bot.js",
+                            nick or "Bot",
+                            host,
+                            port,
+                            version or "1.21",
+                        ],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                        text=True,
+                        bufsize=1,
+                        universal_newlines=True,
+                    )
+                    threading.Thread(target=read_bot_output, args=(bot,), daemon=True).start()
+                    bot_running = True
+                    bot_message = f"Bot iniciado com sucesso. Servidor {host}:{port} está ativo."
+                    with log_lock:
+                        bot_logs.append(bot_message)
+
+    return render_template(
+        "Painel.html",
+        mensagem=bot_message,
+        bot_running=bot_running,
+        server_status=server_status,
+        bot_logs=list(bot_logs),
+    )
 
 @app.route("/admin", methods=["GET", "POST"])
 @login_required
