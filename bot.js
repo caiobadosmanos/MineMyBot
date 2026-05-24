@@ -1,12 +1,24 @@
+const fs = require('fs');
 const net = require('net');
 const mineflayer = require('mineflayer');
 const { Movements, pathfinder, goals: { GoalBlock, GoalXZ } } = require('mineflayer-pathfinder');
 const minecraftData = require('minecraft-data');
-const config = require('./settings.json');
 const { logger } = require('./logging.js');
 
-const [,, cliNick, cliHost, cliPort, cliVersion] = process.argv;
+const [,, cliNick, cliHost, cliPort, cliVersion, cliSettingsPath] = process.argv;
 const username = cliNick || `Bot_${Math.floor(Math.random() * 10000)}`;
+const settingsPath = cliSettingsPath || './settings.json';
+let config = {};
+try {
+  config = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+} catch (error) {
+  try {
+    config = require('./settings.json');
+  } catch (e) {
+    config = {};
+  }
+}
+
 const serverHost = cliHost || config.server?.ip || 'localhost';
 const serverPort = Number(cliPort || config.server?.port) || 25565;
 const serverVersion = cliVersion || config.server?.version || '1.20.2';

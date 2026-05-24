@@ -334,3 +334,313 @@ footer {
 .login-link:hover {
     text-decoration: underline;
 }
+
+/* Painel do Bot */
+.painel-container {
+    display: grid;
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 0 40px;
+}
+
+.painel-card {
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 24px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+    padding: 28px;
+}
+
+.painel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.eyebrow {
+    display: inline-block;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin-bottom: 10px;
+}
+
+.painel-header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: #f8fafc;
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 110px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.status-pill.online {
+    background: rgba(34, 197, 94, 0.15);
+    color: #a7f3d0;
+}
+
+.status-pill.offline {
+    background: rgba(248, 113, 113, 0.15);
+    color: #fecaca;
+}
+
+.status-pill.unknown {
+    background: rgba(56, 189, 248, 0.15);
+    color: #bfdbfe;
+}
+
+.painel-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.summary-card {
+    padding: 18px 20px;
+    border-radius: 20px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.summary-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.summary-card strong {
+    font-size: 1.1rem;
+    color: #f8fafc;
+}
+
+.dashboard-form {
+    display: grid;
+    gap: 18px;
+}
+
+.form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-row.half {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+}
+
+.check-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    padding-top: 4px;
+}
+
+.painel-section-header {
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.painel-section-header h2 {
+    margin: 0 0 8px;
+    font-size: 1.25rem;
+    color: #f8fafc;
+}
+
+.painel-section-header p {
+    margin: 0;
+    color: #94a3b8;
+    line-height: 1.5;
+}
+
+.settings-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    color: #cffafe;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+    font-weight: 700;
+}
+
+.settings-toggle:hover {
+    background: rgba(56, 189, 248, 0.2);
+    transform: translateY(-1px);
+}
+
+.gear-icon {
+    display: inline-flex;
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(14, 165, 233, 0.15);
+}
+
+.settings-content {
+    overflow: hidden;
+    max-height: 2000px;
+    transition: max-height 0.35s ease, opacity 0.35s ease, padding 0.35s ease;
+}
+
+.settings-card.collapsed .settings-content {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    pointer-events: none;
+}
+
+.settings-card.collapsed .settings-toggle {
+    background: rgba(226, 232, 240, 0.1);
+}
+
+.dashboard-form label {
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+.dashboard-form input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    color: #e2e8f0;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-form input:focus {
+    border-color: rgba(56, 189, 248, 0.55);
+    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.12);
+}
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.button-primary,
+.button-secondary {
+    padding: 14px 24px;
+    border-radius: 999px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.button-primary {
+    background: #38bdf8;
+    color: #0f172a;
+}
+
+.button-primary:hover {
+    transform: translateY(-1px);
+    background: #0ea5e9;
+}
+
+.button-secondary {
+    background: rgba(248, 113, 113, 0.15);
+    color: #f8fafc;
+}
+
+.button-secondary:hover {
+    transform: translateY(-1px);
+    background: rgba(248, 113, 113, 0.25);
+}
+
+.painel-message {
+    margin-top: 18px;
+    padding: 16px 20px;
+    border-radius: 18px;
+    background: rgba(56, 189, 248, 0.12);
+    color: #bfdbfe;
+    border: 1px solid rgba(56, 189, 248, 0.18);
+}
+
+.painel-log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.painel-log-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #f8fafc;
+}
+
+.log-note {
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+.painel-log-body {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 20px;
+    padding: 18px 20px;
+    max-height: 320px;
+    overflow: auto;
+}
+
+.painel-log-body ul {
+    list-style: none;
+    display: grid;
+    gap: 12px;
+    padding: 0;
+    margin: 0;
+}
+
+.painel-log-body li {
+    color: #cbd5e1;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.empty-state {
+    color: #94a3b8;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+@media (max-width: 900px) {
+    .painel-summary-grid,
+    .form-row.half {
+        grid-template-columns: 1fr;
+    }
+}

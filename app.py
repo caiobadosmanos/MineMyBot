@@ -1,8 +1,9 @@
 import os
+import json
 import socket
 import threading
 import subprocess
-from collections import deque
+from collections import deque, defaultdict
 from flask import Flask, redirect, render_template, request, session, jsonify
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -10,26 +11,92 @@ from werkzeug.utils import secure_filename
 
 from cs50 import SQL
 
-
 from functools import wraps
+
+SETTINGS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'settings.json')
+USER_SETTINGS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'user_settings.json')
 
 import subprocess
 import smtplib
 import email.message
 
-bot = None
-bot_logs = deque(maxlen=50)
+user_bots = {}
+user_bot_logs = defaultdict(lambda: deque(maxlen=50))
 log_lock = threading.Lock()
 
 
-def read_bot_output(proc):
+def load_settings():
+    try:
+        with open(SETTINGS_PATH, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return {
+            'server': {'ip': 'localhost', 'port': 25565, 'version': '1.20.2'},
+            'utils': {
+                'auto-auth': {'enabled': False, 'password': ''},
+                'chat-messages': {'enabled': True, 'messages': ['Olá servidor!'], 'repeat': False, 'repeat-delay': 10},
+                'anti-afk': {'enabled': False, 'sneak': False}
+            },
+            'position': {'enabled': False, 'x': 0, 'y': 64, 'z': 0}
+        }
+
+
+def save_settings(settings):
+    with open(SETTINGS_PATH, 'w', encoding='utf-8') as f:
+        json.dump(settings, f, indent=2, ensure_ascii=False)
+
+
+def get_user_settings_path(user_id):
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), f'user_settings_{user_id}.json')
+
+
+def load_user_settings(user_id):
+    user_path = get_user_settings_path(user_id)
+    try:
+        if os.path.exists(user_path):
+            with open(user_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception:
+        pass
+
+    try:
+        with open(USER_SETTINGS_PATH, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return data.get(str(user_id), load_settings())
+    except Exception:
+        return load_settings()
+
+
+def save_user_settings(user_id, settings):
+    user_path = get_user_settings_path(user_id)
+    try:
+        with open(user_path, 'w', encoding='utf-8') as f:
+            json.dump(settings, f, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
+
+    try:
+        if os.path.exists(USER_SETTINGS_PATH):
+            with open(USER_SETTINGS_PATH, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        else:
+            data = {}
+    except Exception:
+        data = {}
+
+    data[str(user_id)] = settings
+    with open(USER_SETTINGS_PATH, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+
+def read_bot_output(proc, user_id):
     if proc.stdout is None:
         return
     for line in proc.stdout:
         text = line.strip()
         if text:
             with log_lock:
-                bot_logs.append(text)
+                user_bot_logs[user_id].append(text)
 
 
 def check_server(host, port, timeout=5):
@@ -127,55 +194,94 @@ def inicialpage():
 @app.route("/Painel", methods=["GET", "POST"])
 @login_required
 def painel():
-    global bot
+    user_id = session["user_id"]
+    settings = load_user_settings(user_id)
     bot_running = False
     bot_message = None
     server_status = None
+    host = settings['server'].get('ip', '')
+    port = settings['server'].get('port', '')
+    version = settings['server'].get('version', '1.21')
 
-    if bot is not None:
-        if bot.poll() is None:
+    user_bot = user_bots.get(user_id)
+    if user_bot is not None:
+        if user_bot.poll() is None:
             bot_running = True
         else:
-            bot = None
+            user_bots.pop(user_id, None)
 
     if request.method == "POST":
         action = request.form.get("action")
         nick = request.form.get("nick")
-        host = request.form.get("host")
-        version = request.form.get("version")
-        port = request.form.get("port")
+        form_host = request.form.get("host")
+        form_version = request.form.get("version")
+        form_port = request.form.get("port")
 
-        if action == "sair":
-            if bot_running and bot:
-                bot.terminate()
-                bot = None
+        if action == "salvar":
+            settings['server']['ip'] = form_host or settings['server']['ip']
+            settings['server']['port'] = int(form_port) if form_port else settings['server']['port']
+            settings['server']['version'] = form_version or settings['server']['version']
+            settings['utils']['auto-auth']['enabled'] = request.form.get("auto_auth_enabled") == "on"
+            settings['utils']['auto-auth']['password'] = request.form.get("auto_auth_password") or settings['utils']['auto-auth']['password']
+            settings['utils']['chat-messages']['enabled'] = request.form.get("chat_messages_enabled") == "on"
+            settings['utils']['chat-messages']['repeat'] = request.form.get("chat_repeat") == "on"
+            settings['utils']['chat-messages']['repeat-delay'] = int(request.form.get("chat_repeat_delay") or settings['utils']['chat-messages']['repeat-delay'])
+            messages_text = request.form.get("chat_messages") or ",".join(settings['utils']['chat-messages'].get('messages', []))
+            settings['utils']['chat-messages']['messages'] = [m.strip() for m in messages_text.split(',') if m.strip()]
+            settings['utils']['anti-afk']['enabled'] = request.form.get("anti_afk_enabled") == "on"
+            settings['utils']['anti-afk']['sneak'] = request.form.get("anti_afk_sneak") == "on"
+            settings['position']['enabled'] = request.form.get("position_enabled") == "on"
+            settings['position']['x'] = int(request.form.get("position_x") or settings['position']['x'])
+            settings['position']['y'] = int(request.form.get("position_y") or settings['position']['y'])
+            settings['position']['z'] = int(request.form.get("position_z") or settings['position']['z'])
+
+            save_user_settings(user_id, settings)
+            bot_message = "Configurações salvas com sucesso."
+            host = settings['server']['ip']
+            port = settings['server']['port']
+            version = settings['server']['version']
+
+        elif action == "sair":
+            if bot_running and user_bot:
+                user_bot.terminate()
+                user_bots.pop(user_id, None)
                 bot_running = False
                 bot_message = "Bot interrompido com sucesso."
                 with log_lock:
-                    bot_logs.append("Bot interrompido manualmente.")
+                    user_bot_logs[user_id].append("Bot interrompido manualmente.")
             else:
                 bot_message = "Nenhum bot em execução no momento."
 
         elif action == "iniciar":
             if bot_running:
                 bot_message = "O bot já está em execução."
-            elif not host or not port:
+            elif not form_host or not form_port:
                 bot_message = "Host e porta são obrigatórios para iniciar o bot."
             else:
+                host = form_host
+                port = int(form_port)
+                version = form_version or version
                 server_status = "online" if check_server(host, port) else "offline"
                 if server_status == "offline":
                     bot_message = f"Servidor {host}:{port} não está ativo ou não aceita conexões."
                     with log_lock:
-                        bot_logs.append(bot_message)
+                        user_bot_logs[user_id].append(bot_message)
                 else:
-                    bot = subprocess.Popen(
+                    settings['server']['ip'] = host
+                    settings['server']['port'] = port
+                    settings['server']['version'] = version
+                    save_user_settings(user_id, settings)
+                    settings_path = get_user_settings_path(user_id)
+
+                    proc = subprocess.Popen(
                         [
                             "node",
                             "bot.js",
                             nick or "Bot",
                             host,
-                            port,
-                            version or "1.21",
+                            str(port),
+                            version,
+                            settings_path,
                         ],
                         stdout=subprocess.PIPE,
                         stderr=subprocess.STDOUT,
@@ -183,18 +289,23 @@ def painel():
                         bufsize=1,
                         universal_newlines=True,
                     )
-                    threading.Thread(target=read_bot_output, args=(bot,), daemon=True).start()
+                    user_bots[user_id] = proc
+                    threading.Thread(target=read_bot_output, args=(proc, user_id), daemon=True).start()
                     bot_running = True
                     bot_message = f"Bot iniciado com sucesso. Servidor {host}:{port} está ativo."
                     with log_lock:
-                        bot_logs.append(bot_message)
+                        user_bot_logs[user_id].append(bot_message)
 
     return render_template(
         "Painel.html",
         mensagem=bot_message,
         bot_running=bot_running,
         server_status=server_status,
-        bot_logs=list(bot_logs),
+        bot_logs=list(user_bot_logs[user_id]),
+        settings=settings,
+        host=host,
+        port=port,
+        version=version,
     )
 
 @app.route("/admin", methods=["GET", "POST"])
