@@ -83,7 +83,18 @@ def after_request(response):
     response.headers["Pragma"] = "no-cache"
     return response
 
+
 @app.route("/", methods=["GET", "POST"])
+def inicialpage():
+    if request.method == "GET":
+        pass
+    if request.method == "POST":
+        return redirect("/home")
+    return render_template("inicialpage.html")
+
+
+
+@app.route("/home", methods=["GET", "POST"])
 @login_required
 def index():
     global produto  # Define a variável global 'produto'
